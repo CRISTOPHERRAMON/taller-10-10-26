@@ -948,3 +948,4 @@ function drawWalls() {
   if (roomFromLink) $("room-code").value = roomFromLink.toUpperCase();
   applyCustomizations();
 })();
+
