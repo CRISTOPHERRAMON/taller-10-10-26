@@ -863,7 +863,7 @@ function drawWalls() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(label, labelX, labelY + 8.5);
-}
+}s
 
   function burstAtStar(index) {
     const star = state.stars[index];
