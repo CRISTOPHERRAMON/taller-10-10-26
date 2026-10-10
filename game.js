@@ -721,7 +721,10 @@ function drawWalls() {
     const cx = sprite.x * CELL + CELL / 2;
     // Animación de rebote suave
     const cy = sprite.y * CELL + CELL / 2 + Math.sin(time / 250 + index) * 1.5;
-    const color = playerColor(Number(player.color) || 0);
+    
+    // Tono marrón para el pelaje (el 'color' se usará en detalles o ropas para no romper la mecánica de juego, pero el castor será marrón)
+    const beaverColor = "#8a5229"; 
+    const darkBeaverColor = "#5c3214";
 
     // 1. Sombra en el suelo
     ctx.fillStyle = "#08132999";
@@ -737,56 +740,119 @@ function drawWalls() {
         ctx.restore();
     }
 
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = "#000000"; // Contorno negro estilo pixel art/dibujo
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#000000"; // Contorno para el pixel art
 
-    // 3. Zapatos (Pies rojos/magenta)
-    ctx.fillStyle = "#d92054";
-    // Pie izquierdo
-    ctx.beginPath(); ctx.ellipse(cx - 10, cy + 14, 9, 6, -Math.PI / 8, 0, Math.PI * 2); 
+    // 3. Gran cola de castor (detrás del cuerpo)
+    ctx.fillStyle = darkBeaverColor;
+    ctx.save();
+    ctx.translate(cx + 12, cy + 10);
+    ctx.rotate(Math.PI / 6);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 11, 6, 0, 0, Math.PI * 2); // Cola ovalada y plana
     ctx.fill(); ctx.stroke();
-    // Pie derecho
-    ctx.beginPath(); ctx.ellipse(cx + 10, cy + 14, 9, 6, Math.PI / 8, 0, Math.PI * 2); 
-    ctx.fill(); ctx.stroke();
+    
+    // Patrón de red o escamas en la cola
+    ctx.strokeStyle = "#2e1708";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-6, -3); ctx.lineTo(6, 3);
+    ctx.moveTo(-6, 0); ctx.lineTo(4, 5);
+    ctx.moveTo(-3, -4); ctx.lineTo(8, 1);
+    ctx.moveTo(6, -3); ctx.lineTo(-6, 3);
+    ctx.moveTo(4, -5); ctx.lineTo(-6, 0);
+    ctx.stroke();
+    ctx.restore();
 
-    // 4. Brazos (A los costados)
-    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#000000";
+
+    // 4. Pies (Zarpas de castor traseras)
+    ctx.fillStyle = darkBeaverColor;
+    ctx.beginPath(); ctx.ellipse(cx - 9, cy + 16, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx + 9, cy + 16, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // 5. Orejas redondas de castor
+    ctx.fillStyle = beaverColor;
+    ctx.beginPath(); ctx.arc(cx - 11, cy - 13, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + 11, cy - 13, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = "#ffb380"; // Interior de la oreja
+    ctx.beginPath(); ctx.arc(cx - 11, cy - 13, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 11, cy - 13, 2.5, 0, Math.PI * 2); ctx.fill();
+
+    // 6. Brazos / Garras (A los costados)
+    ctx.fillStyle = beaverColor;
     // Brazo izquierdo
-    ctx.beginPath(); ctx.ellipse(cx - 15, cy + 4, 6, 5, -Math.PI / 4, 0, Math.PI * 2); 
+    ctx.beginPath(); ctx.ellipse(cx - 16, cy + 4, 5, 4, -Math.PI / 4, 0, Math.PI * 2); 
     ctx.fill(); ctx.stroke();
     // Brazo derecho
-    ctx.beginPath(); ctx.ellipse(cx + 15, cy + 4, 6, 5, Math.PI / 4, 0, Math.PI * 2); 
+    ctx.beginPath(); ctx.ellipse(cx + 16, cy + 4, 5, 4, Math.PI / 4, 0, Math.PI * 2); 
     ctx.fill(); ctx.stroke();
 
-    // 5. Cuerpo principal (Círculo grande)
-    ctx.beginPath(); ctx.arc(cx, cy, 17, 0, Math.PI * 2); 
+    // 7. Cuerpo principal (Redondo)
+    ctx.fillStyle = beaverColor;
+    ctx.beginPath(); ctx.arc(cx, cy, 16, 0, Math.PI * 2); 
     ctx.fill(); ctx.stroke();
 
-    // 6. Mejillas sonrojadas
-    ctx.fillStyle = "#f25088";
-    ctx.beginPath(); ctx.ellipse(cx - 9, cy + 3, 3.5, 1.5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 9, cy + 3, 3.5, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+    // 8. Pancita de color más claro
+    ctx.fillStyle = "#f3d3b0";
+    ctx.beginPath(); ctx.ellipse(cx, cy + 5, 10, 8, 0, 0, Math.PI * 2); ctx.fill();
 
-    // 7. Ojos
+    // 9. Ojos redondos
     ctx.fillStyle = "#000000";
-    // Óvalos negros
-    ctx.beginPath(); ctx.ellipse(cx - 4, cy - 3, 2, 5.5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 4, cy - 3, 2, 5.5, 0, 0, Math.PI * 2); ctx.fill();
-    // Brillo de los ojos
+    ctx.beginPath(); ctx.arc(cx - 4, cy - 3, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + 4, cy - 3, 2, 0, Math.PI * 2); ctx.fill();
+    // Pequeños brillos blancos
     ctx.fillStyle = "#ffffff";
-    ctx.beginPath(); ctx.ellipse(cx - 4, cy - 6, 1, 2, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx + 4, cy - 6, 1, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(cx - 4.5, cy - 4.5, 1, 1);
+    ctx.fillRect(cx + 3.5, cy - 4.5, 1, 1);
 
-    // 8. Boca pequeña
-    ctx.fillStyle = "#990033";
-    ctx.beginPath(); ctx.arc(cx, cy + 6, 1.5, 0, Math.PI * 2); ctx.fill();
+    // 10. Hocico y Dientes grandes
+    ctx.fillStyle = "#e2b283"; // Área de la nariz y bigotes
+    ctx.beginPath(); ctx.ellipse(cx, cy + 1, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-    // 9. Etiqueta de nombre flotante
+    // Dientes de castor (Dos pequeños cuadrados blancos sobresaliendo)
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(cx - 2, cy + 3.5, 1.8, 3);
+    ctx.fillRect(cx + 0.2, cy + 3.5, 1.8, 3);
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(cx - 2, cy + 3.5, 1.8, 3);
+    ctx.strokeRect(cx + 0.2, cy + 3.5, 1.8, 3);
+
+    // Pequeña nariz oscura
+    ctx.fillStyle = "#402010";
+    ctx.beginPath(); ctx.ellipse(cx, cy - 1, 2, 1.2, 0, 0, Math.PI * 2); ctx.fill();
+
+    // 11. Gorra Roja (con visera)
+    ctx.fillStyle = "#e62229"; // Rojo vivo
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 2;
+
+    // Copa de la gorra (media elipse superior)
+    ctx.beginPath();
+    ctx.arc(cx, cy - 11, 10, Math.PI, 0); // Domo de la gorra
+    ctx.lineTo(cx + 10, cy - 10);
+    ctx.lineTo(cx - 10, cy - 10);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+
+    // Visera (apuntando ligeramente al costado derecho)
+    ctx.fillStyle = "#b30b14"; // Rojo más oscuro o sombra para la visera
+    ctx.beginPath();
+    ctx.ellipse(cx + 6, cy - 10, 7, 2.5, Math.PI / 16, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Botón superior de la gorra
+    ctx.fillStyle = "#ffffff"; // Botón blanco de detalle o rojo
+    ctx.beginPath(); ctx.arc(cx, cy - 21, 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // 12. Etiqueta de nombre flotante
     const label = String(player.name || "Jugador").slice(0, 10);
     ctx.font = "700 10px 'Space Mono', monospace";
     const labelWidth = Math.max(38, Math.min(100, ctx.measureText(label).width + 14));
     const labelX = Math.max(labelWidth / 2 + 4, Math.min(WIDTH * CELL - labelWidth / 2 - 4, cx));
-    const labelY = sprite.y < 1 ? cy + 28 : cy - 28; // Ajustado para el tamaño redondo
+    const labelY = sprite.y < 1 ? cy + 28 : cy - 35; // Ajustado un poco más arriba por la gorra
     
     ctx.fillStyle = "#fffdf4";
     rounded(labelX - labelWidth / 2, labelY, labelWidth, 17, 5);
