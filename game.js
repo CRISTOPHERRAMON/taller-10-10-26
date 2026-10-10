@@ -864,7 +864,6 @@ function drawWalls() {
     ctx.textBaseline = "middle";
     ctx.fillText(label, labelX, labelY + 8.5);
 }
-
   function burstAtStar(index) {
     const star = state.stars[index];
     if (!star) return;
