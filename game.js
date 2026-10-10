@@ -520,153 +520,274 @@
   }
 
   function drawFloor(time) {
-    ctx.fillStyle = custom.colorMapa || "#1d2648";
-    ctx.fillRect(0, 0, WIDTH * CELL, HEIGHT * CELL);
-    const light = ctx.createRadialGradient(WIDTH * CELL * .72, 70, 10, WIDTH * CELL * .65, 170, WIDTH * CELL * .65);
-    light.addColorStop(0, "#766bc055");
-    light.addColorStop(1, "#111a3300");
-    ctx.fillStyle = light;
-    ctx.fillRect(0, 0, WIDTH * CELL, HEIGHT * CELL);
+  const canvasW = WIDTH * CELL;
+  const canvasH = HEIGHT * CELL;
+  
+  // Definimos los límites de la arena (centro) y el agua (lados)
+  const shoreLeft = canvasW * 0.22;  // La arena empieza al 22% del ancho
+  const shoreRight = canvasW * 0.78; // La arena termina al 78% del ancho
 
-    ctx.save();
-    ctx.strokeStyle = "#aabaff24";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(WIDTH * CELL - 90, 35, 170, .25, 2.9);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(WIDTH * CELL - 90, 35, 235, .4, 2.7);
-    ctx.stroke();
-    ctx.restore();
+  // 1. Mar de fondo (Color cyan sólido que cubre todo inicialmente)
+  ctx.fillStyle = "#27e8e8";
+  ctx.fillRect(0, 0, canvasW, canvasH);
 
-    for (let y = 0; y < HEIGHT; y++) {
-      for (let x = 0; x < WIDTH; x++) {
-        ctx.fillStyle = (x + y) % 2 === 0 ? "#ffffff09" : "#0000000b";
-        rounded(x * CELL + 3, y * CELL + 3, CELL - 6, CELL - 6, 6);
-        ctx.fillStyle = "#a1b6e628";
-        ctx.fillRect(x * CELL + 8, y * CELL + 8, 3, 3);
-      }
-    }
-
-    ctx.fillStyle = "#ffe35b";
-    for (let x = 14; x < WIDTH * CELL; x += 56) {
-      ctx.fillRect(x, 4, 20, 3);
-      ctx.fillRect(x, HEIGHT * CELL - 7, 20, 3);
-    }
-    ctx.fillStyle = "#ffffff80";
-    for (let i = 0; i < 30; i++) {
-      const x = (i * 149 + 41) % (WIDTH * CELL);
-      const y = (i * 83 + 61) % (HEIGHT * CELL);
-      const pulse = .45 + Math.sin(time / 750 + i) * .35;
-      ctx.globalAlpha = pulse;
-      ctx.fillRect(x, y, 2, 2);
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  function drawWalls() {
-    for (const wall of WALLS) {
-      const [x, y] = wall.split(",").map(Number);
-      const left = x * CELL + 6;
-      const top = y * CELL + 4;
-      ctx.fillStyle = "#0e1835";
-      rounded(left + 3, top + 6, 42, 43, 8);
-      ctx.fillStyle = "#ff8266";
-      rounded(left, top, 42, 42, 8);
-      ctx.strokeStyle = "#122042";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      ctx.fillStyle = "#ffc09b";
-      rounded(left + 5, top + 5, 32, 14, 4);
-      ctx.fillStyle = "#ffe35b";
-      rounded(left + 9, top + 26, 24, 7, 2);
-      ctx.fillStyle = "#1b2140";
-      for (const offset of [8, 34]) {
-        ctx.beginPath();
-        ctx.arc(left + offset, top + 35, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
+  // Detalles del mar: estelas horizontales de las olas animadas
+  ctx.fillStyle = "#77f5f5";
+  for (let yPos = 20; yPos < canvasH; yPos += 40) {
+    for (let i = 0; i < 5; i++) {
+      // Movimiento suave basado en el tiempo
+      let wx = ((time / (30 + i * 10)) + i * 200 + yPos * 50) % (canvasW + 100) - 50;
+      let width = 20 + (i * 20);
+      // Dibujamos las estelas en bloques estilo pixel art
+      ctx.fillRect(Math.floor(wx / 4) * 4, Math.floor(yPos / 4) * 4 + (i * 12 % 30), width, 4);
     }
   }
 
+  // 2. Banco de Arena en el centro (Color base durazno/crema)
+  ctx.fillStyle = "#fde3b8";
+  ctx.fillRect(shoreLeft, 0, shoreRight - shoreLeft, canvasH);
+
+  // Textura de la arena: píxeles oscuros esparcidos
+  ctx.fillStyle = "#faba79";
+  for (let i = 0; i < 300; i++) {
+    // Posiciones aleatorias fijas dentro del área de la arena
+    let sx = shoreLeft + ((i * 137) % (shoreRight - shoreLeft));
+    let sy = (i * 93) % canvasH;
+    let size = (i % 4 === 0) ? 8 : 4; 
+    ctx.fillRect(Math.floor(sx / 4) * 4, Math.floor(sy / 4) * 4, size, size);
+  }
+
+  // 3. Espuma de las orillas (Líneas dentadas verticales animadas)
+  for (let y = 0; y < canvasH; y += 8) {
+    // -- Orilla Izquierda --
+    let waveOffsetL = Math.sin((y / 50) + (time / 500)) * 16;
+    let localShoreL = shoreLeft + waveOffsetL;
+    
+    // Espuma blanca izquierda
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(Math.floor(localShoreL / 4) * 4 - 8, y, 12, 8);
+    // Arena mojada debajo de la espuma
+    ctx.fillStyle = "#faba79";
+    ctx.fillRect(Math.floor(localShoreL / 4) * 4 + 4, y, 8, 8);
+
+    // -- Orilla Derecha --
+    let waveOffsetR = Math.sin((y / 60) + (time / 450) + 2) * 16;
+    let localShoreR = shoreRight - waveOffsetR;
+    
+    // Espuma blanca derecha
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(Math.floor(localShoreR / 4) * 4, y, 12, 8);
+    // Arena mojada derecha
+    ctx.fillStyle = "#faba79";
+    ctx.fillRect(Math.floor(localShoreR / 4) * 4 - 8, y, 8, 8);
+  }
+
+  // 4. Cuadrícula del suelo
+  for (let y = 0; y < HEIGHT; y++) {
+    for (let x = 0; x < WIDTH; x++) {
+      ctx.fillStyle = (x + y) % 2 === 0 ? "#ffffff11" : "#0000000a";
+      rounded(x * CELL + 3, y * CELL + 3, CELL - 6, CELL - 6, 6);
+    }
+  }
+
+  // 5. Zonas de regeneración (superior e inferior)
+  ctx.fillStyle = "#ffb380";
+  for (let x = 14; x < canvasW; x += 56) {
+    ctx.fillRect(x, 4, 20, 3);
+    ctx.fillRect(x, canvasH - 7, 20, 3);
+  }
+}
+
+function drawWalls() {
+  for (const wall of WALLS) {
+    const [x, y] = wall.split(",").map(Number);
+    // Centramos un poco el bloque dentro de la celda de 52x52
+    const left = x * CELL + 5;
+    const top = y * CELL + 5;
+    const size = 42;
+
+    // 1. Fondo principal (durazno/crema claro)[cite: 5]
+    ctx.fillStyle = "#ffdca8";
+    ctx.fillRect(left, top, size, size);
+    
+    // 2. Patrón de puntos naranjas intercalados[cite: 5]
+    ctx.fillStyle = "#ff9d3a";
+    const dot = 8; // Tamaño del punto simulando píxeles
+    // Fila 1
+    ctx.fillRect(left + 4, top + 4, dot, dot);
+    ctx.fillRect(left + 24, top + 4, dot, dot);
+    // Fila 2
+    ctx.fillRect(left + 14, top + 17, dot, dot);
+    ctx.fillRect(left + 34, top + 17, dot, dot);
+    // Fila 3
+    ctx.fillRect(left + 4, top + 30, dot, dot);
+    ctx.fillRect(left + 24, top + 30, dot, dot);
+
+    // 3. Borde rojo oscuro/marrón[cite: 5]
+    ctx.strokeStyle = "#6b0000";
+    ctx.lineWidth = 3;
+    ctx.strokeRect(left, top, size, size);
+
+    // 4. Esquinas celestes (cyan)[cite: 5]
+    ctx.fillStyle = "#5ce4ff";
+    ctx.fillRect(left - 1.5, top - 1.5, 4, 4); // Superior izquierda
+    ctx.fillRect(left + size - 2.5, top - 1.5, 4, 4); // Superior derecha
+    ctx.fillRect(left - 1.5, top + size - 2.5, 4, 4); // Inferior izquierda
+    ctx.fillRect(left + size - 2.5, top + size - 2.5, 4, 4); // Inferior derecha
+  }
+}
   function drawCollectible(star, index, time) {
     const cx = star.x * CELL + CELL / 2;
+    // Animación de flotación suave
     const cy = star.y * CELL + CELL / 2 + Math.sin(time / 360 + index) * 2;
-    const pulse = 1 + Math.sin(time / 300 + index * 2) * .08;
+    const pulse = 1 + Math.sin(time / 300 + index * 2) * .05;
+
     ctx.save();
-    ctx.shadowColor = custom.colorEstrellas || "#ffe35b";
-    ctx.shadowBlur = 20;
-    ctx.fillStyle = "#ffe35b33";
-    ctx.beginPath(); ctx.arc(cx, cy, 23 * pulse, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "#ffe35b88";
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(cx, cy, 19 * pulse, 0, Math.PI * 2); ctx.stroke();
     ctx.translate(cx, cy);
-    ctx.rotate(Math.sin(time / 600 + index) * .14);
-    ctx.fillStyle = custom.colorEstrellas || "#ffe35b";
-    drawStar(0, 0, 5, 15 * pulse, 6.5 * pulse);
-    ctx.strokeStyle = "#3d2e4b";
+    ctx.scale(pulse, pulse);
+
+    // 1. Resplandor o sombra suave debajo de las cerezas
+    ctx.fillStyle = "#00000022";
+    ctx.beginPath(); ctx.ellipse(-8, 12, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9, 12, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+    // 2. Tallos verdes
+    ctx.strokeStyle = "#1a5e20"; // Verde oscuro para el borde de hojas y tallos
     ctx.lineWidth = 2.5;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    // Tallo izquierdo
+    ctx.moveTo(-8, 2);
+    ctx.quadraticCurveTo(-4, -12, 2, -14);
+    // Tallo derecho
+    ctx.moveTo(9, 2);
+    ctx.quadraticCurveTo(6, -12, 2, -14);
     ctx.stroke();
-    ctx.fillStyle = "#fff8d7";
-    drawStar(-3, -4, 4, 3, 1.2);
+
+    // 3. Hojas
+    ctx.fillStyle = "#55a663"; // Verde claro para el interior de las hojas
+    ctx.lineWidth = 1.5;
+    
+    // Hoja superior
+    ctx.beginPath();
+    ctx.ellipse(8, -18, 7, 3.5, -Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Línea central de la hoja superior
+    ctx.beginPath(); ctx.moveTo(2, -14); ctx.lineTo(12, -22); ctx.stroke();
+
+    // Hoja inferior derecha
+    ctx.beginPath();
+    ctx.ellipse(11, -11, 6, 3, -Math.PI / 8, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    // Línea central de la hoja inferior
+    ctx.beginPath(); ctx.moveTo(2, -14); ctx.lineTo(15, -10); ctx.stroke();
+
+    // 4. Cereza Izquierda
+    ctx.fillStyle = "#e3242b"; // Rojo principal
+    ctx.strokeStyle = "#4a0404"; // Borde rojo muy oscuro
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(-8, 4, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    
+    // Brillo de la cereza izquierda
+    ctx.strokeStyle = "#ffccda"; // Tono rosado/blanco para el brillo
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(-8, 4, 4.5, Math.PI, Math.PI * 1.4); ctx.stroke();
+
+    // 5. Cereza Derecha
+    ctx.fillStyle = "#e3242b";
+    ctx.strokeStyle = "#4a0404";
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(9, 4, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // Brillo de la cereza derecha
+    ctx.strokeStyle = "#ffccda";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(9, 4, 4.5, Math.PI, Math.PI * 1.4); ctx.stroke();
+
     ctx.restore();
-  }
+}
 
   function drawPlayer(uid, player, index, time) {
     const targetX = Number(player.x);
     const targetY = Number(player.y);
     if (!Number.isInteger(targetX) || !Number.isInteger(targetY) || targetX < 0 || targetY < 0 || targetX >= WIDTH || targetY >= HEIGHT) return;
+    
     let sprite = sprites.get(uid);
     if (!sprite) { sprite = { x: targetX, y: targetY }; sprites.set(uid, sprite); }
+    
     sprite.x += (targetX - sprite.x) * .27;
     sprite.y += (targetY - sprite.y) * .27;
+    
     const cx = sprite.x * CELL + CELL / 2;
+    // Animación de rebote suave
     const cy = sprite.y * CELL + CELL / 2 + Math.sin(time / 250 + index) * 1.5;
     const color = playerColor(Number(player.color) || 0);
 
+    // 1. Sombra en el suelo
     ctx.fillStyle = "#08132999";
-    ctx.beginPath(); ctx.ellipse(cx, cy + 19, 19, 5, 0, 0, Math.PI * 2); ctx.fill();
-    if (uid === state.uid) {
-      ctx.save();
-      ctx.strokeStyle = "#ffe35b";
-      ctx.lineWidth = 2.5;
-      ctx.setLineDash([4, 3]);
-      ctx.beginPath(); ctx.arc(cx, cy + 1, 24, 0, Math.PI * 2); ctx.stroke();
-      ctx.restore();
-    }
-    ctx.fillStyle = "#15203e";
-    rounded(cx - 14, cy + 12, 10, 11, 3);
-    rounded(cx + 4, cy + 12, 10, 11, 3);
-    ctx.fillStyle = "#15203e";
-    rounded(cx - 23, cy - 9, 10, 25, 4);
-    ctx.fillStyle = color;
-    rounded(cx - 20, cy - 6, 8, 19, 3);
-    ctx.strokeStyle = "#15203e";
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(cx, cy - 16); ctx.lineTo(cx, cy - 24); ctx.stroke();
-    ctx.fillStyle = "#ffe35b";
-    ctx.beginPath(); ctx.arc(cx, cy - 25, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = color;
-    rounded(cx - 17, cy - 18, 34, 36, 11);
-    ctx.strokeStyle = "#15203e";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.fillStyle = "#172848";
-    rounded(cx - 14, cy - 9, 28, 16, 7);
-    ctx.fillStyle = "#a8eeff";
-    rounded(cx - 11, cy - 7, 22, 11, 5);
-    ctx.fillStyle = "#ffffffcc";
-    rounded(cx - 8, cy - 5, 10, 3, 2);
-    ctx.fillStyle = "#fff7d2";
-    ctx.beginPath(); ctx.arc(cx, cy + 11, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx, cy + 18, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
 
+    // 2. Anillo de selección (Tú)
+    if (uid === state.uid) {
+        ctx.save();
+        ctx.strokeStyle = "#ffe35b";
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.arc(cx, cy + 1, 24, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+    }
+
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "#000000"; // Contorno negro estilo pixel art/dibujo
+
+    // 3. Zapatos (Pies rojos/magenta)
+    ctx.fillStyle = "#d92054";
+    // Pie izquierdo
+    ctx.beginPath(); ctx.ellipse(cx - 10, cy + 14, 9, 6, -Math.PI / 8, 0, Math.PI * 2); 
+    ctx.fill(); ctx.stroke();
+    // Pie derecho
+    ctx.beginPath(); ctx.ellipse(cx + 10, cy + 14, 9, 6, Math.PI / 8, 0, Math.PI * 2); 
+    ctx.fill(); ctx.stroke();
+
+    // 4. Brazos (A los costados)
+    ctx.fillStyle = color;
+    // Brazo izquierdo
+    ctx.beginPath(); ctx.ellipse(cx - 15, cy + 4, 6, 5, -Math.PI / 4, 0, Math.PI * 2); 
+    ctx.fill(); ctx.stroke();
+    // Brazo derecho
+    ctx.beginPath(); ctx.ellipse(cx + 15, cy + 4, 6, 5, Math.PI / 4, 0, Math.PI * 2); 
+    ctx.fill(); ctx.stroke();
+
+    // 5. Cuerpo principal (Círculo grande)
+    ctx.beginPath(); ctx.arc(cx, cy, 17, 0, Math.PI * 2); 
+    ctx.fill(); ctx.stroke();
+
+    // 6. Mejillas sonrojadas
+    ctx.fillStyle = "#f25088";
+    ctx.beginPath(); ctx.ellipse(cx - 9, cy + 3, 3.5, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + 9, cy + 3, 3.5, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+
+    // 7. Ojos
+    ctx.fillStyle = "#000000";
+    // Óvalos negros
+    ctx.beginPath(); ctx.ellipse(cx - 4, cy - 3, 2, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + 4, cy - 3, 2, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+    // Brillo de los ojos
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.ellipse(cx - 4, cy - 6, 1, 2, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx + 4, cy - 6, 1, 2, 0, 0, Math.PI * 2); ctx.fill();
+
+    // 8. Boca pequeña
+    ctx.fillStyle = "#990033";
+    ctx.beginPath(); ctx.arc(cx, cy + 6, 1.5, 0, Math.PI * 2); ctx.fill();
+
+    // 9. Etiqueta de nombre flotante
     const label = String(player.name || "Jugador").slice(0, 10);
     ctx.font = "700 10px 'Space Mono', monospace";
     const labelWidth = Math.max(38, Math.min(100, ctx.measureText(label).width + 14));
     const labelX = Math.max(labelWidth / 2 + 4, Math.min(WIDTH * CELL - labelWidth / 2 - 4, cx));
-    const labelY = sprite.y < 1 ? cy + 26 : cy - 39;
+    const labelY = sprite.y < 1 ? cy + 28 : cy - 28; // Ajustado para el tamaño redondo
+    
     ctx.fillStyle = "#fffdf4";
     rounded(labelX - labelWidth / 2, labelY, labelWidth, 17, 5);
     ctx.strokeStyle = "#15203e";
@@ -676,7 +797,7 @@
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(label, labelX, labelY + 8.5);
-  }
+}
 
   function burstAtStar(index) {
     const star = state.stars[index];
